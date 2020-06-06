@@ -10,8 +10,8 @@ ob_implicit_flush();
 
 $serverHello = 'fakeSMTP ESMTP PHP Mail Server Ready';
 $header = true;
-$address = 'smtp.goodsane.com';
-$port = 6010;
+$address = 'smtp.goodsane.com'; //smtp.goodsane.com
+$port = 6013;
 $ssl = openssl_get_cert_locations();
 $connect = false;
 $users = [
@@ -223,10 +223,38 @@ while(true) {
                             if (preg_match('/^Subject: (.*)/i', $headerlines[$i], $matches)) {
                                 $subject = trim($matches[1]);
                             }
+                            if (preg_match('/^From: (.*) <.*>/i', $headerlines[$i], $matches)) {
+                                $senderName = trim($matches[1]);
+                            }
                         }
-                        echo "\r\n"."subject: ".json_encode($subject)."\n";
+                        echo "\r\n"."subject: ".$subject."\n";
 
-                    } else {
+                        $start = strpos($body, "<html>");
+                        $end = strpos($body, "</html>");
+                        $length = $end-$start+strlen("</html>");
+                        $content = substr($body,$start, $length);
+                        echo "\r\n S:: ".$content;
+                        
+                    //     if (admin_email::where('name', $senderName)->count() < 1) {
+                    //       $sender = admin_email::create([
+                    //         'name' => $senderName,
+                    //         'email' => $from
+                    //       ]);
+                    //     } else {
+                    //       $sid = admin_email::where('name', $senderName)->pluck('id');
+                    //       $sender = admin_email::find($sid);
+                    //     }
+
+                    //     $temp = [
+                    //         'sender_id' => $sender->id,
+                    //         'subject' => $subject,
+                    //         'content' => $content,
+                    //         'status' => 1
+                    //   ];
+                    //     $newMail = email_content::create($temp);
+
+                    } 
+                    else {
                         $body = $splitmail[0];
                         echo "\r\n"."body:: ".json_encode($body)."\n";
 
@@ -243,7 +271,7 @@ while(true) {
                     set_time_limit(5); // Just run the exit to prevent open threads / abuse
                     break;
                 } elseif ($receivingData) {
-                    $mail .= $data;
+                    $mail .= quoted_printable_decode($data);
                 }
 
             }
